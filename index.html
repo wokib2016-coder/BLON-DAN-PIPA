@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Deep Learning - Eksperimen Balon & Pipa Paralon</title>
+    <title>Eksperimen Balon & Pipa Paralon</title>
     <style>
         * {
             margin: 0;
@@ -107,6 +107,7 @@
             max-height: 400px;
             object-fit: contain;
             border-radius: 8px;
+            display: none;
         }
         .image-upload-area .remove-btn {
             position: absolute;
@@ -124,6 +125,7 @@
             align-items: center;
             justify-content: center;
             transition: 0.2s;
+            z-index: 10;
         }
         .image-upload-area .remove-btn:hover {
             background: #dc2626;
@@ -136,6 +138,9 @@
         .image-upload-area.has-image .upload-text,
         .image-upload-area.has-image .upload-hint {
             display: none;
+        }
+        .image-upload-area.has-image img {
+            display: block;
         }
 
         .options-grid {
@@ -403,7 +408,6 @@
             aspect-ratio: 600 / 400;
         }
 
-        /* Styling untuk file input yang tersembunyi */
         #fileInput {
             display: none;
         }
@@ -425,7 +429,7 @@
                 <span class="upload-icon">🖼️</span>
                 <span class="upload-text">Klik atau drag & drop untuk upload gambar soal</span>
                 <span class="upload-hint">Format: JPG, PNG, JPEG • Maksimal 5MB</span>
-                <img id="uploadedImage" src="" alt="Soal" style="display:none;" />
+                <img id="uploadedImage" src="" alt="Soal" />
                 <button class="remove-btn" id="removeImageBtn" title="Hapus gambar">✕</button>
             </div>
 
@@ -527,7 +531,9 @@
         const removeImageBtn = document.getElementById('removeImageBtn');
 
         // Klik area upload untuk membuka file dialog
-        imageUploadArea.addEventListener('click', () => {
+        imageUploadArea.addEventListener('click', function(e) {
+            // Jangan trigger jika yang diklik adalah tombol hapus
+            if (e.target === removeImageBtn) return;
             fileInput.click();
         });
 
@@ -571,7 +577,7 @@
         });
 
         // Hapus gambar
-        removeImageBtn.addEventListener('click', (e) => {
+        removeImageBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             uploadedImage.src = '';
             uploadedImage.style.display = 'none';
@@ -842,3 +848,4 @@
 
 </body>
 </html>
+
