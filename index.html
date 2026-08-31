@@ -11,8 +11,6 @@
             box-sizing: border-box;
         }
         :root {
-            --primary: #1e3a5f;
-            --accent: #3a7bd5;
             --bg: #0f172a;
             --panel: #1e293b;
             --text: #f8fafc;
@@ -145,13 +143,18 @@
 
         .options-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
             gap: 10px;
             margin-top: 8px;
         }
-        @media (max-width: 600px) {
+        @media (max-width: 768px) {
             .options-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+        }
+        @media (max-width: 500px) {
+            .options-grid {
+                grid-template-columns: 1fr 1fr;
             }
         }
 
@@ -166,15 +169,16 @@
             transition: all 0.25s ease;
             display: flex;
             align-items: center;
+            justify-content: center;
             gap: 12px;
-            text-align: left;
+            text-align: center;
             width: 100%;
             color: #e2e8f0;
         }
         .option-btn:hover:not(.correct-selected):not(.wrong-selected) {
             background: #1e293b;
             border-color: #64748b;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
         }
         .option-btn .letter {
             display: inline-flex;
@@ -190,6 +194,8 @@
         }
         .option-btn .text {
             flex: 1;
+            font-size: 1.1rem;
+            font-weight: 700;
         }
         .option-btn .feedback-icon {
             font-size: 1.2rem;
@@ -411,6 +417,17 @@
         #fileInput {
             display: none;
         }
+
+        /* Pesan error jika gambar tidak ditemukan */
+        .error-message {
+            color: #ef4444;
+            font-size: 0.9rem;
+            margin-top: 8px;
+            display: none;
+        }
+        .image-upload-area.has-error .error-message {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -431,6 +448,7 @@
                 <span class="upload-hint">Format: JPG, PNG, JPEG • Maksimal 5MB</span>
                 <img id="uploadedImage" src="soal.jpg" alt="Soal" />
                 <button class="remove-btn" id="removeImageBtn" title="Hapus gambar">✕</button>
+                <div class="error-message">⚠️ File soal.jpg tidak ditemukan. Silakan upload gambar.</div>
             </div>
 
             <div class="options-grid" id="optionsContainer">
@@ -530,10 +548,18 @@
         const uploadedImage = document.getElementById('uploadedImage');
         const removeImageBtn = document.getElementById('removeImageBtn');
 
-        // Jika gambar gagal dimuat, tampilkan placeholder
+        // Cek apakah gambar berhasil dimuat
         uploadedImage.onerror = function() {
             this.style.display = 'none';
             imageUploadArea.classList.remove('has-image');
+            imageUploadArea.classList.add('has-error');
+        };
+
+        // Jika gambar berhasil dimuat
+        uploadedImage.onload = function() {
+            this.style.display = 'block';
+            imageUploadArea.classList.add('has-image');
+            imageUploadArea.classList.remove('has-error');
         };
 
         // Klik area upload untuk membuka file dialog
@@ -551,6 +577,7 @@
                     uploadedImage.src = event.target.result;
                     uploadedImage.style.display = 'block';
                     imageUploadArea.classList.add('has-image');
+                    imageUploadArea.classList.remove('has-error');
                 };
                 reader.readAsDataURL(file);
             }
@@ -576,6 +603,7 @@
                     uploadedImage.src = event.target.result;
                     uploadedImage.style.display = 'block';
                     imageUploadArea.classList.add('has-image');
+                    imageUploadArea.classList.remove('has-error');
                 };
                 reader.readAsDataURL(file);
             }
@@ -654,7 +682,7 @@
         });
 
         // ============================================================
-        // 4. SIMULASI CANVAS (Transfer Massa Udara Dua Balon)
+        // 4. SIMULASI CANVAS
         // ============================================================
         const canvas = document.getElementById('simCanvas');
         const ctx = canvas.getContext('2d');
@@ -722,12 +750,10 @@
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-            // Watermark
             ctx.fillStyle = '#38bdf8';
             ctx.font = 'bold 14px sans-serif';
             ctx.fillText('Simulasi Fisika - WOKIB', 20, 30);
 
-            // Tali Penggantung
             ctx.fillStyle = '#64748b';
             ctx.fillRect(pivot.x - 30, 30, 60, 6);
             ctx.strokeStyle = '#cbd5e1';
@@ -737,7 +763,6 @@
             ctx.lineTo(pivot.x, pivot.y);
             ctx.stroke();
 
-            // Engsel
             ctx.fillStyle = '#f59e0b';
             ctx.beginPath();
             ctx.arc(pivot.x, pivot.y, 4, 0, Math.PI * 2);
@@ -748,13 +773,11 @@
                 ctx.translate(pivot.x, pivot.y);
                 ctx.rotate(angle);
 
-                // Pipa
                 ctx.fillStyle = '#94a3b8';
                 ctx.fillRect(-pipeWidth / 2, -6, pipeWidth, 12);
                 ctx.fillStyle = '#0f172a';
                 ctx.fillRect(-pipeWidth / 2 + 4, -3, pipeWidth - 8, 6);
 
-                // Aliran udara
                 if (ry > minRy) {
                     ctx.fillStyle = '#38bdf8';
                     const time = Date.now() * 0.005;
@@ -774,7 +797,6 @@
 
                 ctx.restore();
             } else {
-                // Pipa datar
                 ctx.fillStyle = '#94a3b8';
                 ctx.fillRect(pivot.x - pipeWidth / 2, pivot.y - 6, pipeWidth, 12);
                 ctx.fillStyle = '#0f172a';
@@ -812,7 +834,6 @@
 
         function drawDisconnectedBalloon(x, y, r, color, label) {
             ctx.save();
-            // Simpul
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.moveTo(x, y - r);
@@ -828,7 +849,6 @@
             ctx.lineTo(x + 6, y - r - 3);
             ctx.stroke();
 
-            // Badan
             ctx.fillStyle = color;
             ctx.beginPath();
             ctx.ellipse(x, y, r * 0.85, r, 0, 0, Math.PI * 2);
@@ -853,3 +873,4 @@
 
 </body>
 </html>
+
