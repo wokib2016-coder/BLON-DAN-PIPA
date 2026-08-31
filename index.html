@@ -1,0 +1,844 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Deep Learning - Eksperimen Balon & Pipa Paralon</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --primary: #1e3a5f;
+            --accent: #3a7bd5;
+            --bg: #0f172a;
+            --panel: #1e293b;
+            --text: #f8fafc;
+            --shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+            --correct: #2e7d32;
+            --wrong: #d32f2f;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #38bdf8;
+            font-size: 1.8rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+        .subtitle {
+            color: #94a3b8;
+            font-size: 0.95rem;
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+        }
+
+        .question-card {
+            background: var(--panel);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 24px 22px;
+            width: 100%;
+            margin-bottom: 16px;
+            border: 1px solid #334155;
+        }
+
+        /* AREA UPLOAD GAMBAR SOAL */
+        .image-upload-area {
+            width: 100%;
+            min-height: 200px;
+            border: 3px dashed #475569;
+            border-radius: 12px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: #0f172a;
+            padding: 20px;
+            margin-bottom: 16px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        .image-upload-area:hover {
+            border-color: #38bdf8;
+            background: #1a2332;
+        }
+        .image-upload-area.dragover {
+            border-color: #38bdf8;
+            background: #1e3a5f;
+        }
+        .image-upload-area .upload-icon {
+            font-size: 3rem;
+            color: #475569;
+            margin-bottom: 10px;
+        }
+        .image-upload-area .upload-text {
+            color: #94a3b8;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+        .image-upload-area .upload-hint {
+            color: #64748b;
+            font-size: 0.85rem;
+            margin-top: 6px;
+        }
+        .image-upload-area img {
+            max-width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 8px;
+        }
+        .image-upload-area .remove-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #ef4444;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+        .image-upload-area .remove-btn:hover {
+            background: #dc2626;
+            transform: scale(1.1);
+        }
+        .image-upload-area.has-image .remove-btn {
+            display: flex;
+        }
+        .image-upload-area.has-image .upload-icon,
+        .image-upload-area.has-image .upload-text,
+        .image-upload-area.has-image .upload-hint {
+            display: none;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 8px;
+        }
+        @media (max-width: 600px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .option-btn {
+            padding: 14px 18px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border: 2.5px solid #475569;
+            border-radius: 12px;
+            background: #0f172a;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            width: 100%;
+            color: #e2e8f0;
+        }
+        .option-btn:hover:not(.correct-selected):not(.wrong-selected) {
+            background: #1e293b;
+            border-color: #64748b;
+            transform: translateY(-1px);
+        }
+        .option-btn .letter {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background: #1e293b;
+            font-weight: 700;
+            color: #38bdf8;
+            flex-shrink: 0;
+        }
+        .option-btn .text {
+            flex: 1;
+        }
+        .option-btn .feedback-icon {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: none;
+            margin-left: auto;
+        }
+
+        .option-btn.correct-selected {
+            border-color: var(--correct);
+            background: #1b3a1b;
+            color: #a5d6a7;
+            box-shadow: 0 0 0 3px rgba(46, 125, 50, 0.3);
+        }
+        .option-btn.correct-selected .feedback-icon.check {
+            display: inline;
+            color: #4caf50;
+        }
+        .option-btn.correct-selected .letter {
+            background: var(--correct);
+            color: white;
+        }
+
+        .option-btn.wrong-selected {
+            border-color: var(--wrong);
+            background: #3a1b1b;
+            color: #ef9a9a;
+            box-shadow: 0 0 0 3px rgba(211, 47, 47, 0.3);
+        }
+        .option-btn.wrong-selected .feedback-icon.cross {
+            display: inline;
+            color: #ef5350;
+        }
+        .option-btn.wrong-selected .letter {
+            background: var(--wrong);
+            color: white;
+        }
+
+        .feedback-box {
+            margin-top: 16px;
+            padding: 16px 20px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            display: none;
+            font-weight: 500;
+            line-height: 1.6;
+        }
+        .feedback-box.show {
+            display: block;
+        }
+        .feedback-box.benar {
+            background: #1b3a1b;
+            border: 2px solid var(--correct);
+            color: #a5d6a7;
+        }
+        .feedback-box.salah {
+            background: #3a1b1b;
+            border: 2px solid var(--wrong);
+            color: #ef9a9a;
+        }
+
+        .explanation-detail {
+            margin-top: 8px;
+            font-weight: 400;
+            color: #cbd5e1;
+            font-size: 0.92rem;
+        }
+
+        /* TOMBOL SIMULASI */
+        .sim-toggle-btn {
+            background: linear-gradient(135deg, #0284c7, #0369a1);
+            color: white;
+            border: none;
+            padding: 16px 28px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            border-radius: 14px;
+            cursor: pointer;
+            width: 100%;
+            box-shadow: 0 6px 20px rgba(2, 132, 199, 0.35);
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+            letter-spacing: 0.5px;
+        }
+        .sim-toggle-btn:active {
+            transform: scale(0.98);
+        }
+
+        .simulation-wrapper {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            gap: 16px;
+            animation: fadeIn 0.4s ease;
+        }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .sim-card {
+            background: var(--panel);
+            border-radius: 16px;
+            box-shadow: var(--shadow);
+            padding: 20px 22px;
+            border: 1px solid #334155;
+        }
+        .sim-card h3 {
+            color: #38bdf8;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        .sim-card p {
+            line-height: 1.7;
+            color: #cbd5e1;
+        }
+
+        .sim-controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin: 12px 0;
+        }
+        .btn-sim {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: 0.2s;
+            flex: 1;
+            min-width: 120px;
+        }
+        .btn-sim-connect {
+            background: #0284c7;
+            color: white;
+        }
+        .btn-sim-connect:hover {
+            background: #0369a1;
+        }
+        .btn-sim-reset {
+            background: #475569;
+            color: white;
+        }
+        .btn-sim-reset:hover {
+            background: #334155;
+        }
+
+        .status-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px 20px;
+            background: #0f172a;
+            padding: 12px 16px;
+            border-radius: 8px;
+            border-left: 4px solid #38bdf8;
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-top: 10px;
+        }
+        @media (max-width: 500px) {
+            .status-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        .status-label {
+            color: #94a3b8;
+        }
+        .status-value {
+            color: #facc15;
+            font-weight: 600;
+        }
+        .status-value.flow {
+            color: #f87171;
+        }
+
+        .info-box {
+            background: #1e1b4b;
+            border: 1px solid #4338ca;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #c7d2fe;
+            margin-top: 10px;
+        }
+        .info-box strong {
+            color: #818cf8;
+        }
+
+        .highlight-box {
+            background: #1e293b;
+            border-left: 5px solid #f59e0b;
+            padding: 12px 16px;
+            border-radius: 8px;
+            margin-top: 10px;
+            color: #fde68a;
+        }
+        .highlight-box strong {
+            color: #fbbf24;
+        }
+
+        canvas {
+            background: #090d16;
+            border-radius: 8px;
+            display: block;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 600 / 400;
+        }
+
+        /* Styling untuk file input yang tersembunyi */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+
+        <h1>🧪 EKSPERIMEN BALON & PIPA</h1>
+        <p class="subtitle">Ayo Kuasai Konsepnya dan Pahami Konteksnya</p>
+
+        <!-- KARTU SOAL -->
+        <div class="question-card">
+
+            <!-- AREA UPLOAD GAMBAR SOAL -->
+            <div class="image-upload-area" id="imageUploadArea">
+                <input type="file" id="fileInput" accept="image/*" />
+                <span class="upload-icon">🖼️</span>
+                <span class="upload-text">Klik atau drag & drop untuk upload gambar soal</span>
+                <span class="upload-hint">Format: JPG, PNG, JPEG • Maksimal 5MB</span>
+                <img id="uploadedImage" src="" alt="Soal" style="display:none;" />
+                <button class="remove-btn" id="removeImageBtn" title="Hapus gambar">✕</button>
+            </div>
+
+            <div class="options-grid" id="optionsContainer">
+                <!-- A -->
+                <button class="option-btn" data-index="0" data-correct="false">
+                    <span class="letter">A</span>
+                    <span class="text">A</span>
+                    <span><span class="feedback-icon check">✔</span><span class="feedback-icon cross">✖</span></span>
+                </button>
+                <!-- B → KUNCI JAWABAN -->
+                <button class="option-btn" data-index="1" data-correct="true">
+                    <span class="letter">B</span>
+                    <span class="text">B</span>
+                    <span><span class="feedback-icon check">✔</span><span class="feedback-icon cross">✖</span></span>
+                </button>
+                <!-- C -->
+                <button class="option-btn" data-index="2" data-correct="false">
+                    <span class="letter">C</span>
+                    <span class="text">C</span>
+                    <span><span class="feedback-icon check">✔</span><span class="feedback-icon cross">✖</span></span>
+                </button>
+                <!-- D -->
+                <button class="option-btn" data-index="3" data-correct="false">
+                    <span class="letter">D</span>
+                    <span class="text">D</span>
+                    <span><span class="feedback-icon check">✔</span><span class="feedback-icon cross">✖</span></span>
+                </button>
+                <!-- E -->
+                <button class="option-btn" data-index="4" data-correct="false">
+                    <span class="letter">E</span>
+                    <span class="text">E</span>
+                    <span><span class="feedback-icon check">✔</span><span class="feedback-icon cross">✖</span></span>
+                </button>
+            </div>
+
+            <!-- Feedback -->
+            <div class="feedback-box" id="feedbackBox">
+                <span id="feedbackMessage"></span>
+                <div class="explanation-detail" id="feedbackDetail"></div>
+            </div>
+
+        </div>
+
+        <!-- TOMBOL SIMULASI -->
+        <button class="sim-toggle-btn" id="simToggleBtn">🔬 SIMULASI KONSEP</button>
+
+        <!-- SIMULASI -->
+        <div class="simulation-wrapper" id="simulationWrapper">
+
+            <div class="sim-card">
+                <h3>🎈 Simulasi Transfer Massa Udara Dua Balon pada Pipa Paralon</h3>
+                <p style="margin-bottom:10px;">
+                    Saat mulut balon dimasukkan ke ujung pipa dan simpul dibuka, <strong>gas</strong> di dalam balon
+                    bergerak dari tempat bertekanan tinggi ke tempat bertekanan rendah.
+                </p>
+
+                <canvas id="simCanvas" width="600" height="400"></canvas>
+
+                <div class="sim-controls">
+                    <button id="btnConnect" class="btn-sim btn-sim-connect">🔗 Masukan Mulut Balon ke Ujung Pipa</button>
+                    <button id="btnReset" class="btn-sim btn-sim-reset">↺ Reset Simulasi</button>
+                </div>
+
+                <div class="status-grid">
+                    <div><span class="status-label">Tahap:</span> <span id="stageText" class="status-value">1. Belum Terpasang</span></div>
+                    <div><span class="status-label">Posisi Batang:</span> <span id="balanceText" class="status-value">Seimbang (Horisontal)</span></div>
+                    <div><span class="status-label">Volume Balon Merah (x):</span> <span id="massXText" class="status-value">Volume Awal (Besar)</span></div>
+                    <div><span class="status-label">Volume Balon Biru (y):</span> <span id="massYText" class="status-value">Volume Awal (Kecil)</span></div>
+                    <div style="grid-column: 1 / -1;"><span class="status-label">Aliran Udara:</span> <span id="flowText" class="status-value flow">Tidak Ada</span></div>
+                </div>
+
+                <div class="info-box">
+                    <strong>📖 Penjelasan Fisika:</strong><br />
+                    1. <strong>Awal:</strong> Kedua balon terikat simpul berada jauh di bawah pipa.<br />
+                    2. <strong>Setelah Dihubungkan:</strong> Mulut balon dipasang pada kedua ujung pipa. Udara mengalir dari
+                    balon biru (y) ke balon merah (x). Balon biru (y) mengempis, sedangkan balon merah (x) bertambah besar dan
+                    bertambah berat sehingga pipa miring turun di sisi kiri (x).
+                </div>
+
+                <div class="highlight-box">
+                    <strong>🔬 Konsep Kunci:</strong> Gas bergerak dari <strong>tekanan tinggi (volume kecil)</strong>
+                    ke <strong>tekanan rendah (volume besar)</strong>. Balon biru (y) yang lebih kecil tekanannya lebih tinggi,
+                    sehingga udaranya mengalir ke balon merah (x) yang lebih besar.
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================================
+        // 1. LOGIKA UPLOAD GAMBAR SOAL
+        // ============================================================
+        const imageUploadArea = document.getElementById('imageUploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadedImage = document.getElementById('uploadedImage');
+        const removeImageBtn = document.getElementById('removeImageBtn');
+
+        // Klik area upload untuk membuka file dialog
+        imageUploadArea.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Handle file selection
+        fileInput.addEventListener('change', function(e) {
+            const file = this.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedImage.src = event.target.result;
+                    uploadedImage.style.display = 'block';
+                    imageUploadArea.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Drag and drop support
+        imageUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.add('dragover');
+        });
+
+        imageUploadArea.addEventListener('dragleave', () => {
+            imageUploadArea.classList.remove('dragover');
+        });
+
+        imageUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            imageUploadArea.classList.remove('dragover');
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    uploadedImage.src = event.target.result;
+                    uploadedImage.style.display = 'block';
+                    imageUploadArea.classList.add('has-image');
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Hapus gambar
+        removeImageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            uploadedImage.src = '';
+            uploadedImage.style.display = 'none';
+            imageUploadArea.classList.remove('has-image');
+            fileInput.value = '';
+        });
+
+        // ============================================================
+        // 2. LOGIKA JAWABAN SOAL
+        // ============================================================
+        const optionBtns = document.querySelectorAll('.option-btn');
+        const feedbackBox = document.getElementById('feedbackBox');
+        const feedbackMessage = document.getElementById('feedbackMessage');
+        const feedbackDetail = document.getElementById('feedbackDetail');
+
+        const answerData = [
+            { 
+                correct: false, 
+                explanation: '❌ Jawaban A kurang tepat. Gas di dalam balon tidak akan diam karena ada perbedaan tekanan yang menyebabkan gas bergerak dari tekanan tinggi ke tekanan rendah.' 
+            },
+            { 
+                correct: true, 
+                explanation: '✅ Benar! Gas di dalam balon bergerak dari tekanan tinggi (volume kecil) ke tekanan rendah (volume besar) melalui pipa. Balon biru (y) yang lebih kecil tekanannya lebih tinggi, sehingga udaranya mengalir ke balon merah (x) yang lebih besar.' 
+            },
+            { 
+                correct: false, 
+                explanation: '❌ Jawaban C kurang tepat. Balon tidak pecah di dalam pipa karena gas justru keluar melalui mulut balon menuju tekanan yang lebih rendah.' 
+            },
+            { 
+                correct: false, 
+                explanation: '❌ Jawaban D kurang tepat. Balon tidak tersedot, justru gas mengalir keluar dari balon menuju tekanan yang lebih rendah.' 
+            },
+            { 
+                correct: false, 
+                explanation: '❌ Jawaban E kurang tepat. Ini adalah fenomena fisika tentang perpindahan gas akibat perbedaan tekanan, bukan reaksi kimia.' 
+            }
+        ];
+
+        optionBtns.forEach((btn, idx) => {
+            btn.addEventListener('click', function() {
+                optionBtns.forEach(b => b.classList.remove('correct-selected', 'wrong-selected'));
+
+                const isCorrect = this.dataset.correct === 'true';
+                this.classList.add(isCorrect ? 'correct-selected' : 'wrong-selected');
+
+                const data = answerData[idx];
+                feedbackBox.className = 'feedback-box show ' + (isCorrect ? 'benar' : 'salah');
+                feedbackMessage.textContent = isCorrect ? '✅ Jawaban Benar!' : '❌ Jawaban Kurang Tepat';
+                feedbackDetail.textContent = data.explanation;
+
+                feedbackBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            });
+        });
+
+        // ============================================================
+        // 3. TAMPILKAN/SEMBUNYIKAN SIMULASI
+        // ============================================================
+        const simToggleBtn = document.getElementById('simToggleBtn');
+        const simWrapper = document.getElementById('simulationWrapper');
+        let simVisible = false;
+
+        simToggleBtn.addEventListener('click', () => {
+            simVisible = !simVisible;
+            simWrapper.style.display = simVisible ? 'flex' : 'none';
+            simToggleBtn.textContent = simVisible ? '🔬 SEMBUNYIKAN SIMULASI' : '🔬 SIMULASI KONSEP';
+            if (simVisible) {
+                setTimeout(() => simWrapper.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+            }
+        });
+
+        // ============================================================
+        // 4. SIMULASI CANVAS (Transfer Massa Udara Dua Balon)
+        // ============================================================
+        const canvas = document.getElementById('simCanvas');
+        const ctx = canvas.getContext('2d');
+
+        const btnConnect = document.getElementById('btnConnect');
+        const btnResetSim = document.getElementById('btnReset');
+
+        const stageText = document.getElementById('stageText');
+        const balanceText = document.getElementById('balanceText');
+        const massXText = document.getElementById('massXText');
+        const massYText = document.getElementById('massYText');
+        const flowText = document.getElementById('flowText');
+
+        const pivot = { x: 300, y: 130 };
+        const pipeWidth = 220;
+
+        let isConnected = false;
+        let rx = 50;
+        let ry = 30;
+        let angle = 0;
+
+        const minRy = 22;
+        const maxRx = 60;
+
+        btnConnect.addEventListener('click', () => {
+            isConnected = true;
+        });
+
+        btnResetSim.addEventListener('click', () => {
+            isConnected = false;
+            rx = 50;
+            ry = 30;
+            angle = 0;
+        });
+
+        function animate() {
+            if (isConnected) {
+                if (ry > minRy) {
+                    ry -= 0.05;
+                }
+                if (rx < maxRx) {
+                    rx += 0.06;
+                }
+                if (angle > -0.20) {
+                    angle -= 0.001;
+                }
+
+                stageText.textContent = "2. Dimasukkan ke Ujung Pipa";
+                balanceText.textContent = "Miring TURUN di Sisi Merah (x)";
+                massXText.textContent = `BERTAMBAH (rx = ${rx.toFixed(0)})`;
+                massYText.textContent = `MENGEMPIS (ry = ${ry.toFixed(0)})`;
+                flowText.textContent = "🔄 Udara: Biru (y) → Merah (x)";
+            } else {
+                stageText.textContent = "1. Belum Terpasang";
+                balanceText.textContent = "Seimbang (Horisontal)";
+                massXText.textContent = "Volume Awal (Besar)";
+                massYText.textContent = "Volume Awal (Kecil)";
+                flowText.textContent = "⛔ Belum Ada Aliran";
+            }
+
+            draw();
+            requestAnimationFrame(animate);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Watermark
+            ctx.fillStyle = '#38bdf8';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.fillText('Simulasi Fisika - WOKIB', 20, 30);
+
+            // Tali Penggantung
+            ctx.fillStyle = '#64748b';
+            ctx.fillRect(pivot.x - 30, 30, 60, 6);
+            ctx.strokeStyle = '#cbd5e1';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(pivot.x, 36);
+            ctx.lineTo(pivot.x, pivot.y);
+            ctx.stroke();
+
+            // Engsel
+            ctx.fillStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.arc(pivot.x, pivot.y, 4, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (isConnected) {
+                ctx.save();
+                ctx.translate(pivot.x, pivot.y);
+                ctx.rotate(angle);
+
+                // Pipa
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(-pipeWidth / 2, -6, pipeWidth, 12);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(-pipeWidth / 2 + 4, -3, pipeWidth - 8, 6);
+
+                // Aliran udara
+                if (ry > minRy) {
+                    ctx.fillStyle = '#38bdf8';
+                    const time = Date.now() * 0.005;
+                    for (let i = 0; i < 5; i++) {
+                        let dotX = (pipeWidth / 2 - 10) - ((time + i * 35) % (pipeWidth - 20));
+                        ctx.beginPath();
+                        ctx.arc(dotX, 0, 2, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                const leftX = -pipeWidth / 2;
+                const rightX = pipeWidth / 2;
+
+                drawHorizontalBalloon(leftX - rx * 0.85, 0, rx, '#ef4444', 'x');
+                drawHorizontalBalloon(rightX + ry * 0.85, 0, ry, '#3b82f6', 'y');
+
+                ctx.restore();
+            } else {
+                // Pipa datar
+                ctx.fillStyle = '#94a3b8';
+                ctx.fillRect(pivot.x - pipeWidth / 2, pivot.y - 6, pipeWidth, 12);
+                ctx.fillStyle = '#0f172a';
+                ctx.fillRect(pivot.x - pipeWidth / 2 + 4, pivot.y - 3, pipeWidth - 8, 6);
+
+                const leftPipeX = pivot.x - pipeWidth / 2;
+                const rightPipeX = pivot.x + pipeWidth / 2;
+                const farDistY = 310;
+
+                drawDisconnectedBalloon(leftPipeX, farDistY, rx, '#ef4444', 'x');
+                drawDisconnectedBalloon(rightPipeX, farDistY, ry, '#3b82f6', 'y');
+            }
+        }
+
+        function drawHorizontalBalloon(x, y, r, color, label) {
+            ctx.save();
+            ctx.fillStyle = '#facc15';
+            ctx.fillRect(x + (label === 'x' ? r * 0.85 - 4 : -r * 0.85 - 4), y - 6, 8, 12);
+
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.ellipse(x, y, r * 0.85, r * 0.75, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+            ctx.restore();
+        }
+
+        function drawDisconnectedBalloon(x, y, r, color, label) {
+            ctx.save();
+            // Simpul
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.moveTo(x, y - r);
+            ctx.lineTo(x - 6, y - r - 8);
+            ctx.lineTo(x + 6, y - r - 8);
+            ctx.closePath();
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(x - 6, y - r - 3);
+            ctx.lineTo(x + 6, y - r - 3);
+            ctx.stroke();
+
+            // Badan
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.ellipse(x, y, r * 0.85, r, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(label, x, y);
+            ctx.restore();
+        }
+
+        animate();
+
+        console.log('✅ Aplikasi siap! Kunci jawaban: B');
+        console.log('Konsep: Gas bergerak dari tekanan tinggi (volume kecil) ke tekanan rendah (volume besar)');
+    </script>
+
+</body>
+</html>
