@@ -424,12 +424,12 @@
         <div class="question-card">
 
             <!-- AREA UPLOAD GAMBAR SOAL -->
-            <div class="image-upload-area" id="imageUploadArea">
+            <div class="image-upload-area has-image" id="imageUploadArea">
                 <input type="file" id="fileInput" accept="image/*" />
                 <span class="upload-icon">🖼️</span>
                 <span class="upload-text">Klik atau drag & drop untuk upload gambar soal</span>
                 <span class="upload-hint">Format: JPG, PNG, JPEG • Maksimal 5MB</span>
-                <img id="uploadedImage" src="" alt="Soal" />
+                <img id="uploadedImage" src="soal.jpg" alt="Soal" />
                 <button class="remove-btn" id="removeImageBtn" title="Hapus gambar">✕</button>
             </div>
 
@@ -530,9 +530,14 @@
         const uploadedImage = document.getElementById('uploadedImage');
         const removeImageBtn = document.getElementById('removeImageBtn');
 
+        // Jika gambar gagal dimuat, tampilkan placeholder
+        uploadedImage.onerror = function() {
+            this.style.display = 'none';
+            imageUploadArea.classList.remove('has-image');
+        };
+
         // Klik area upload untuk membuka file dialog
         imageUploadArea.addEventListener('click', function(e) {
-            // Jangan trigger jika yang diklik adalah tombol hapus
             if (e.target === removeImageBtn) return;
             fileInput.click();
         });
@@ -848,4 +853,3 @@
 
 </body>
 </html>
-
